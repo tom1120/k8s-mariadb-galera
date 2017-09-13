@@ -11,9 +11,6 @@ COPY galera-recovery.sh /galera-recovery.sh
 
 RUN chmod +x /on-change.sh /galera-recovery.sh
 
-#HEALTHCHECK --interval=10s --timeout=3s --retries=15 \
-#	CMD /bin/sh /healthcheck.sh || exit 1
-
 EXPOSE 3306 4444 4567 4568
 
 ENTRYPOINT ["entrypoint.sh"]

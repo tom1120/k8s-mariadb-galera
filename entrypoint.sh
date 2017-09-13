@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eo pipefail
 shopt -s nullglob
-echo "[MyLog] 2258"
+
 # if command starts with an option, prepend mysqld
 if [ "${1:0:1}" = '-' ]; then
 	set -- mysqld "$@"
