@@ -1,4 +1,6 @@
-# MariaDB Galera on Kubernetes
+# MariaDB 10.2.8 Galera on Kubernetes
+
+Developing.....
 
 Example of Docker image of MariaDB Galera cluster to be used in Kubernetes StatefulSet 
 definition.
