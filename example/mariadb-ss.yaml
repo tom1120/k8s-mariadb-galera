@@ -1,0 +1,139 @@
+#
+# MariaDB 10.2 Galera Cluster
+#
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: mariadb
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+  name: galera-svc
+  labels:
+    app: galera-ss
+spec:
+  ports:
+  - port: 3306
+    name: mysql
+  clusterIP: None
+  selector:
+    app: galera-ss
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: mariadb
+  name: mycnf
+data:
+  temp.cnf: |
+    [galera]
+    wsrep_sst_method = xtrabackup-v2
+    # This can be insecure, because the user is only available via localhost
+    # We should still try to integrate it with Kubernetes secrets
+    wsrep_sst_auth=xtrabackup_sst:xtrabackup_sst
+    default_storage_engine = innodb
+    binlog_format = row
+    innodb_autoinc_lock_mode = 2
+    innodb_flush_log_at_trx_commit = 0
+    query_cache_size = 0
+    query_cache_type = 0
+    # By default every node is standalone
+    wsrep_cluster_name=galera
+    wsrep_on=ON
+    wsrep_provider=/usr/lib/galera/libgalera_smm.so
+    wsrep_node_address=127.0.0.1
+    wsrep_cluster_address="gcomm://galera-ss-0.galera-svc.mariadb.svc.cluster.local,galera-ss-1.galera-svc.mariadb.svc.cluster.local,galera-ss-2.galera-svc.mariadb.svc.cluster.local"
+   
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: mariadb
+  name: peer-finder
+data:
+  onstart.sh: |
+    echo on start
+  onchange.sh: |
+    echo on change
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  namespace: mariadb
+  name: galera-ss
+spec:
+  serviceName: "galera-svc"
+  replicas: 3
+  template:
+    metadata:
+      namespace: mariadb
+      labels:
+        app: galera-ss
+    spec:
+      containers:
+      - name: galera
+        image: smchin/k8s-mariadb-galera
+        # image: fendroid/k8s-mariadb
+        # command: ["bash","/mnt/custom/entrypoint.sh"]
+        ports:
+        - name: mysql
+          containerPort: 3306
+        - name: sst
+          containerPort: 4444
+        - name: replication
+          containerPort: 4567
+        - name: ist
+          containerPort: 4568
+        env:
+        # for peer-finder
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: STS_SERVICE
+          value: galera-svc
+        # MYSQL env
+        - name: MYSQL_ROOT_PASSWORD
+          value: "rootp@ssword"
+          # valueFrom:
+          #   secretKeyRef:
+          #     name: mariadb-secret
+          #     key: root-password
+        - name: MYSQL_DATABASE
+          value: test
+        - name: MYSQL_USER
+          value: biguser
+        - name: XTRABACKUP_PASSWORD
+          value: password
+        - name: MYSQL_PASSWORD
+          value: "biguserp@ssword"
+          # valueFrom:
+          #   secretKeyRef:
+          #     name: mariadb-secret
+          #     key: biguser-password
+        # readinessProbe:
+        #   exec:
+        #     command: ["bash", "-c", "mysql -uroot -p\"${MYSQL_ROOT_PASSWORD}\" -e 'SHOW DATABASES;'"]
+        #   initialDelaySeconds: 20
+        #   timeoutSeconds: 5
+        volumeMounts:
+        - name: mycnf
+          mountPath: /etc/mysql/conf.d
+        - name: mariadb-datadir
+          mountPath: /var/lib/mysql
+        - name: tempcnf
+          mountPath: /mnt/tmp
+      volumes:
+        - name: tempcnf
+          configMap:
+            name: mycnf
+        - name: mycnf
+          emptyDir: {}    
+  volumeClaimTemplates:
+  - metadata:
+      namespace: mariadb
+      name: mariadb-datadir
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi

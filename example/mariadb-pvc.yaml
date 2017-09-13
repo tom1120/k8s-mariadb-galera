@@ -1,0 +1,47 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  namespace: mariadb
+  name: mariadb-datadir-galera-ss-0
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  selector:
+    matchLabels:
+      app: galera-ss
+      podindex: "0"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  namespace: mariadb
+  name: mariadb-datadir-galera-ss-1
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  selector:
+    matchLabels:
+      app: galera-ss
+      podindex: "1"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  namespace: mariadb
+  name: mariadb-datadir-galera-ss-2
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  selector:
+    matchLabels:
+      app: galera-ss
+      podindex: "2"
