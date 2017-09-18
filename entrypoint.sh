@@ -102,14 +102,14 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 			if echo 'SELECT 1' | "${mysql[@]}" &> /dev/null; then
 				break
 			fi
-			echo '[MyLog] MySQL init process in progress...'
+			echo 'MySQL init process in progress...'
 			sleep 1
 		done
 		if [ "$i" = 0 ]; then
-			echo >&2 '[MyLog] MySQL init process failed.'
+			echo >&2 'MySQL init process failed.'
 			exit 1
 		fi
-                echo '[MyLog] MySQL init process in progress end'
+
 		if [ -z "$MYSQL_INITDB_SKIP_TZINFO" ]; then
 			# sed is for https://bugs.mysql.com/bug.php?id=20545
 			mysql_tzinfo_to_sql /usr/share/zoneinfo | sed 's/Local time zone must be set--see zic manual page/FCTY/' | "${mysql[@]}" mysql
@@ -131,7 +131,7 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 				GRANT ALL ON *.* TO 'root'@'${MYSQL_ROOT_HOST}' WITH GRANT OPTION ;
 			EOSQL
 		fi
-                echo '[MyLog] config USER and PASSOWORD'
+
 		"${mysql[@]}" <<-EOSQL
 			-- What's done in this file shouldn't be replicated
 			--  or products like mysql-fabric won't work
@@ -168,8 +168,8 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 
 			echo 'FLUSH PRIVILEGES ;' | "${mysql[@]}"
 		fi
-		
-		echo '[MyLog] run docker-entrypoint-initdb.d'
+
+		echo "[MyLog] run docker-entrypoint-initdb.d"
 		for f in /docker-entrypoint-initdb.d/*; do
 			case "$f" in
 				*.sh)     echo "$0: running $f"; . "$f" ;;

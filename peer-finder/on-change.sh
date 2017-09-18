@@ -49,7 +49,6 @@ while read -ra LINE; do
     else
         PEERS=("${PEERS[@]}" $LINE)
     fi
-    
 done
 
 WSREP_CLUSTER_ADDRESS=$(join , "${PEERS[@]}")
