@@ -102,14 +102,14 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 			if echo 'SELECT 1' | "${mysql[@]}" &> /dev/null; then
 				break
 			fi
-			echo 'MySQL init process in progress...'
+			echo '[MyLog] MySQL init process in progress...'
 			sleep 1
 		done
 		if [ "$i" = 0 ]; then
-			echo >&2 'MySQL init process failed.'
+			echo >&2 '[MyLog] MySQL init process failed.'
 			exit 1
 		fi
-
+                echo '[MyLog] MySQL init process in progress end'
 		if [ -z "$MYSQL_INITDB_SKIP_TZINFO" ]; then
 			# sed is for https://bugs.mysql.com/bug.php?id=20545
 			mysql_tzinfo_to_sql /usr/share/zoneinfo | sed 's/Local time zone must be set--see zic manual page/FCTY/' | "${mysql[@]}" mysql
@@ -131,7 +131,7 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 				GRANT ALL ON *.* TO 'root'@'${MYSQL_ROOT_HOST}' WITH GRANT OPTION ;
 			EOSQL
 		fi
-
+                echo '[MyLog] config USER and PASSOWORD'
 		"${mysql[@]}" <<-EOSQL
 			-- What's done in this file shouldn't be replicated
 			--  or products like mysql-fabric won't work
@@ -168,8 +168,8 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 
 			echo 'FLUSH PRIVILEGES ;' | "${mysql[@]}"
 		fi
-
-		echo
+		
+		echo '[MyLog] run docker-entrypoint-initdb.d'
 		for f in /docker-entrypoint-initdb.d/*; do
 			case "$f" in
 				*.sh)     echo "$0: running $f"; . "$f" ;;
@@ -194,14 +194,37 @@ fi
 # peer-finder
 peer-finder -on-start=/on-change.sh -service="${STS_SERVICE}"
 
+CFG=/etc/mysql/conf.d/my.cnf
+WSRESP_CLUSTER_ADDRESS="$(sed -e "/^wsrep_cluster_address=.*$/p" ${CFG} | tail -1 | awk -F="gcomm://" '{print $2}')"
+echo "WSRESP_CLUSTER_ADDRESS=gcomm://$WSRESP_CLUSTER_ADDRESS"
+
+if [ ! -z $WSRESP_CLUSTER_ADDRESS ]; then
+    echo "[MyLog] todo: check wsrep_local_state_uuid, have to not empty"
+    IFS=,
+    addr_list=($WSRESP_CLUSTER_ADDRESS)
+    for index in "${!addr_list[@]}"
+    do
+        echo "addr=${addr_list[$index]}"
+        WRESP_LOCAL_STATE_UUID="$(mysql -u root -p"${MYSQL_ROOT_PASSWORD}" -h${addr_list[$index]} -e "SHOW STATUS LIKE 'wsrep_local_state_uuid';" | grep 'wsrep_local_state_uuid' | awk '{print $2}')"
+        echo "WRESP_LOCAL_STATE_UUID=$WRESP_LOCAL_STATE_UUID"
+        if [ ! -z $WRESP_LOCAL_STATE_UUID ]; then
+            break
+        fi
+    done
+fi
+
 [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
 ordinal=${BASH_REMATCH[1]}
-echo "ordinal is $ordinal"
-if [ $ordinal -eq 0 ]; then
-   GRASTATE=$DATADIR/grastate.dat
-   [ -f $GRASTATE ] && sed -i "s|safe_to_bootstrap.*|safe_to_bootstrap: 1|g" $GRASTATE
-   _WSRESP_NEW_CLUSTER='--wsrep-new-cluster'
+echo "[MyLog] ordinal is $ordinal"
+
+# if [ "$ordinal" -eq 0 -a -z "$WSRESP_CLUSTER_ADDRESS" ]; then
+if [ "$ordinal" -eq 0 -a -z "$WRESP_LOCAL_STATE_UUID" ]; then
+    GRASTATE=$DATADIR/grastate.dat
+    [ -f $GRASTATE ] && sed -i "s|safe_to_bootstrap.*|safe_to_bootstrap: 1|g" $GRASTATE
+    _WSRESP_NEW_CLUSTER='--wsrep-new-cluster'
+    echo "[MyLog] start new cluster"
 else
-   _WSRESP_NEW_CLUSTER=''
+    _WSRESP_NEW_CLUSTER=''
+    echo "[MyLog] join an existing cluster"
 fi
 exec mysqld $_WSRESP_NEW_CLUSTER

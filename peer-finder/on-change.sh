@@ -52,23 +52,15 @@ while read -ra LINE; do
     
 done
 
-echo "[MyLog] peers are ${PEERS[*]}"
-
 WSREP_CLUSTER_ADDRESS=$(join , "${PEERS[@]}")
 
-echo "[MyLog] after shit peers are ${PEERS[*]}"
-
-echo "MY_NAME = ${MY_NAME}"
-echo "CLUSTER_NAME = ${CLUSTER_NAME}"
-echo "WSREP_CLUSTER_ADDRESS = ${WSREP_CLUSTER_ADDRESS}"
+echo "[MyLog] MY_NAME = ${MY_NAME}"
+echo "[MyLog] CLUSTER_NAME = ${CLUSTER_NAME}"
+echo "[MyLog] WSREP_CLUSTER_ADDRESS = ${WSREP_CLUSTER_ADDRESS}"
 
 sed -i -e "s|^wsrep_node_address=.*$|wsrep_node_address=${MY_NAME}|" ${CFG}
 sed -i -e "s|^wsrep_cluster_name=.*$|wsrep_cluster_name=${CLUSTER_NAME}|" ${CFG}
 sed -i -e "s|^wsrep_cluster_address=.*$|wsrep_cluster_address=gcomm://${WSREP_CLUSTER_ADDRESS}|" ${CFG}
-
-# PEER_ARGS="--wsrep-new-cluster --wsrep_cluster_name=$CLUSTER_NAME --wsrep-cluster-address=gcomm://# $WSREP_CLUSTER_ADDRESS --wsrep_node_address=$MY_NAME"
-
-# cat ${CFG}
 
 # don't need a restart, we're just writing the conf in case there's an
 # unexpected restart on the node.
