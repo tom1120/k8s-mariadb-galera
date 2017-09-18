@@ -72,7 +72,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
       - name: galera
-        image: smchin/k8s-mariadb-galera
+        image: smchin/k8s-mariadb-galera:2.0
         ports:
         - name: mysql
           containerPort: 3306
@@ -91,6 +91,8 @@ spec:
         - name: STS_SERVICE
           value: galera-svc
         # MYSQL env
+        - name: MYSQL_INITDB_SKIP_TZINFO
+          value: "SKIP"
         - name: MYSQL_ROOT_PASSWORD
           value: "rootp@ssword"
           # valueFrom:
