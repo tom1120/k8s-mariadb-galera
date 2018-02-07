@@ -1,6 +1,6 @@
-# 使用Galera Load Balancer实现高可用MariaDB Galera Cluster
+# Galera Load Balancer For MariaDB Galera Cluster On Ubuntu 16.04
 
-### 安装Galera Load Balancer On Ubuntu 16.04
+### 安装Galera Load Balancer
 
 ```bash
 // gosu root
