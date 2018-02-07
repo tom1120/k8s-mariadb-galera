@@ -1,9 +1,11 @@
 # 使用Galera Load Balancer实现高可用MariaDB Galera Cluster
 
-### 安装Galera Load Balancer
+### 安装Galera Load Balancer On Ubuntu 16.04
 
 ```bash
-yum install gcc* libtool
+// gosu root
+sudo -i
+apt-get install libtool autoconf
 git clone https://github.com/codership/glb
 cd glb/
 ./bootstrap.sh
@@ -15,7 +17,7 @@ make install
 
 ```bash
 cp glb/files/glbd.sh /etc/init.d/glb
-cp glb/files/glbd.cfg /etc/sysconfig/glbd
+cp glb/files/glbd.cfg /etc/default/glbd
 ```
 
 ### 修改/etc/sysconfig/glbd
@@ -32,7 +34,7 @@ OTHER_OPTIONS="--round-robin"
 ### 启动Galera Load Balancer
 
 ```bash
-[root@c1 ~]# service glb start
+[root@c1 ~]# /etc/init.d/glb start
 [Fri Mar 18 23:38:04 CST 2016] glbd: starting...
 glb v1.0.1 (epoll)
 Incoming address: 0.0.0.0:8010, control FIFO: /var/run/glbd.fifo
@@ -48,15 +50,16 @@ Destinations: 3
 
 查看状态
 ```
-[root@c1 ~]# service glb getinfo
+[root@c1 ~]# /etc/init.d/glb getinfo
 Router:
 ------------------------------------------------------
         Address       :   weight   usage    map  conns
- 192.168.64.145:3306  :    2.000   0.000    N/A      0
- 192.168.64.146:3306  :    1.000   0.000    N/A      0
- 192.168.64.147:3306  :    1.000   0.000    N/A      0
+    10.78.26.37:3307  :    1.000   0.000    N/A      0
+    10.78.26.38:3307  :    2.000   0.500    N/A      1
+    10.78.26.39:3307  :    2.000   0.000    N/A      0
 ------------------------------------------------------
-Destinations: 3, total connections: 0 of 256 max
+Destinations: 3, total connections: 1 of 256 max
+
 ```
 
 ### 实验测试
