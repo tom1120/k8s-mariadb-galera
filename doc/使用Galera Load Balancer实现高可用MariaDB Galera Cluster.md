@@ -78,7 +78,7 @@ MariaDB [(none)]> SELECT @@wsrep_node_name;
 ```
 glb状态信息
 ```
-[root@c1 ~]# service glb getinfo
+[root@c1 ~]# /etc/init.d/glb getinfo
 Router:
 ------------------------------------------------------
         Address       :   weight   usage    map  conns
@@ -105,7 +105,7 @@ MariaDB [(none)]>
 ```
 glb状态信息
 ```
-[root@c1 ~]# service glb getinfo
+[root@c1 ~]# /etc/init.d/glb getinfo
 Router:
 ------------------------------------------------------
         Address       :   weight   usage    map  conns
@@ -128,7 +128,7 @@ MariaDB [(none)]> SELECT @@wsrep_node_name;
 ```
 glb状态信息
 ```
-[root@c1 ~]# service glb getinfo
+[root@c1 ~]# /etc/init.d/glb getinfo
 Router:
 ------------------------------------------------------
         Address       :   weight   usage    map  conns
