@@ -20,7 +20,7 @@ cp glb/files/glbd.sh /etc/init.d/glb
 cp glb/files/glbd.cfg /etc/default/glbd
 ```
 
-### 修改/etc/sysconfig/glbd
+### 修改/etc/default/glbd
 
 ```
 LISTEN_ADDR="8010"
